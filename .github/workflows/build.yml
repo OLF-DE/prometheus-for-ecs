@@ -1,0 +1,70 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 2 # OR "2" -> To retrieve the preceding commit.
+
+    - name: Set env variables
+      id: set-env-variables
+      env:
+        GITHUB_REF: ${{ github.ref }}
+        GITHUB_SHA: ${{ github.sha }}
+      run: |
+        BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+        BRANCH_NAME=$(echo $BRANCH_NAME | sed 's/\//-/g')
+        IMAGE_TAG=""
+        IMAGE_COMMIT_SHA=$(echo $GITHUB_SHA | cut -c1-8)
+        BUILD_ENVIRONMENT=""
+
+        case "$BRANCH_NAME" in
+        main)
+          IMAGE_TAG=main
+          BUILD_ENVIRONMENT="production"
+          ;;
+        *)
+          echo "This branch has not been configured to build."
+          exit 1
+          ;;
+        esac
+
+        echo "BRANCH_NAME '$BRANCH_NAME'"
+        echo "IMAGE_TAG '$IMAGE_TAG'"
+        echo "IMAGE_COMMIT_SHA '$IMAGE_COMMIT_SHA'"
+
+        # Set Env variables
+        echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+        echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+        echo "BUILD_ENVIRONMENT=$BUILD_ENVIRONMENT" >> $GITHUB_ENV
+        echo "IMAGE_COMMIT_SHA=$IMAGE_COMMIT_SHA" >> $GITHUB_ENV
+
+        echo '::set-output name=image_tag::$IMAGE_TAG'
+
+    - name: Configure AWS Credentials for ECR
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.ECR_AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.ECR_AWS_SECRET_ACCESS_KEY }}
+        aws-region: eu-west-1
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: build, tag, and push image to AWS ECR
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: prometheus-config-reloader
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG-$IMAGE_COMMIT_SHA .
+        docker push -a $ECR_REGISTRY/$ECR_REPOSITORY
