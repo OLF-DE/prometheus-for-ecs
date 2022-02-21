@@ -5,20 +5,22 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 )
 
 const (
-	ScrapeConfigParmeter    = "ECS-Scrape-Configuration"
-	IpAddressAttribute      = "AWS_INSTANCE_IPV4"
-	PortNumberAttribute     = "AWS_INSTANCE_PORT"
-	ClusterNameAttribute    = "ECS_CLUSTER_NAME"
-	ServiceNameAttribute    = "ECS_SERVICE_NAME"
-	TaskDefinitionAttribute = "ECS_TASK_DEFINITION_FAMILY"
-	MetricsPortTag          = "METRICS_PORT"
-	MetricsPathTag          = "METRICS_PATH"
+	ScrapeConfigParmeter          = "ECS-Scrape-Configuration"
+	IpAddressAttribute            = "AWS_INSTANCE_IPV4"
+	PortNumberAttribute           = "AWS_INSTANCE_PORT"
+	AdditonalPortNumbersAttribute = "ADDITIONAL_SCRAPE_PORTS"
+	ClusterNameAttribute          = "ECS_CLUSTER_NAME"
+	ServiceNameAttribute          = "ECS_SERVICE_NAME"
+	TaskDefinitionAttribute       = "ECS_TASK_DEFINITION_FAMILY"
+	MetricsPortTag                = "METRICS_PORT"
+	MetricsPathTag                = "METRICS_PATH"
 )
 
 type CloudMapClient struct {
@@ -172,6 +174,13 @@ func (c *CloudMapClient) getInstanceScrapeConfiguration(sdInstance *ServiceDisco
 		return nil, errors.New(fmt.Sprintf("Cannot find IP address for instance in service %v", sdInstance.service))
 	}
 	targets = append(targets, fmt.Sprintf("%s:%s", *address, *metricsPort))
+
+	scrapePorts, present := serviceTags[AdditonalPortNumbersAttribute]
+	if present {
+		for _, port := range strings.Split(*scrapePorts, ",") {
+			targets = append(targets, fmt.Sprintf("%s:%s", *address, port))
+		}
+	}
 
 	// Path for metrics endpoint is expected as a resource tag with the key '__metrics_path__'
 	defaultPath := aws.String("/metrics")
