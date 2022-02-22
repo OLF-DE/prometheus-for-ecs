@@ -176,7 +176,7 @@ func (c *CloudMapClient) getInstanceScrapeConfiguration(sdInstance *ServiceDisco
 	targets = append(targets, fmt.Sprintf("%s:%s", *address, *metricsPort))
 
 	scrapePorts, present := serviceTags[AdditonalPortNumbersAttribute]
-	if present {
+	if present && *scrapePorts != "" {
 		for _, port := range strings.Split(*scrapePorts, ",") {
 			targets = append(targets, fmt.Sprintf("%s:%s", *address, port))
 		}
