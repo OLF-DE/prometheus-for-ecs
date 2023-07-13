@@ -16,6 +16,7 @@ const (
 	DiscoveryNamespacesParameter = "ECS-ServiceDiscovery-Namespaces"
 )
 
+var prometheusConfigParameter string
 var prometheusConfigFilePath string
 var scrapeConfigFilePath string
 
@@ -38,7 +39,7 @@ func main() {
 	prometheusConfigFilePath = strings.Join([]string{configFileDir, "prometheus.yaml"}, "/")
 	scrapeConfigFilePath = strings.Join([]string{configFileDir, "ecs-services.json"}, "/")
 
-	loadPrometheusConfig()
+	loadPrometheusConfig(prometheusConfigParameter)
 	loadScrapeConfig()
 	log.Println("Loaded initial configuration file")
 
@@ -72,7 +73,7 @@ func main() {
 
 }
 
-func loadPrometheusConfig() {
+func loadPrometheusConfig(prometheusConfigParameter string) {
 	prometheusConfig := aws.GetParameter(prometheusConfigParameter)
 	err := ioutil.WriteFile(prometheusConfigFilePath, []byte(*prometheusConfig), 0644)
 	if err != nil {
