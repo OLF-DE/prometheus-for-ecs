@@ -13,7 +13,6 @@ import (
 )
 
 const (
-	PrometheusConfigParameter    = "ECS-Prometheus-Configuration"
 	DiscoveryNamespacesParameter = "ECS-ServiceDiscovery-Namespaces"
 )
 
@@ -24,6 +23,10 @@ func main() {
 	log.Println("Prometheus configuration reloader started")
 	aws.InitializeAWSSession()
 
+	prometheusConfigParameter, present := os.LookupEnv("PROMETHEUS_CONFIG_PARAMETER")
+	if !present {
+		prometheusConfigParameter = "ECS-Prometheus-Configuration"
+	}
 	configFileDir, present := os.LookupEnv("CONFIG_FILE_DIR")
 	if !present {
 		configFileDir = "/etc/config/"
@@ -70,7 +73,7 @@ func main() {
 }
 
 func loadPrometheusConfig() {
-	prometheusConfig := aws.GetParameter(PrometheusConfigParameter)
+	prometheusConfig := aws.GetParameter(prometheusConfigParameter)
 	err := ioutil.WriteFile(prometheusConfigFilePath, []byte(*prometheusConfig), 0644)
 	if err != nil {
 		log.Println(err)
