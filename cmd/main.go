@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"encoding/json"
 	"log"
 	"os"
 	"strconv"
@@ -79,8 +80,10 @@ func loadPrometheusConfig(prometheusConfigParameter string) {
 	if err != nil {
 		log.Println(err)
 	}  else {
-		jsonb := json.Marshal(prometheusConfig)
-		fmt.Println(string(jsonb))
+		jsonb, err := json.Marshal(prometheusConfig)
+		if err == nil {
+			fmt.Println(string(jsonb))
+		}	
 	}
 }
 
@@ -99,7 +102,9 @@ func reloadScrapeConfig() {
 	if err != nil {
 		log.Println(err)
 	} else {
-		jsonb := json.Marshal(scrapConfig)
-		fmt.Println(string(jsonb))
+		jsonb, err := json.Marshal(scrapConfig)
+		if err == nil {
+			fmt.Println(string(jsonb))
+		}
 	}
 }
