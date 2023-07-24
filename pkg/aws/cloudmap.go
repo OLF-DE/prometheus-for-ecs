@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -22,6 +23,8 @@ const (
 	MetricsPortTag                = "METRICS_PORT"
 	MetricsPathTag                = "METRICS_PATH"
 )
+
+var defaultMetricsPath string
 
 type CloudMapClient struct {
 	service *servicediscovery.ServiceDiscovery
@@ -183,10 +186,13 @@ func (c *CloudMapClient) getInstanceScrapeConfiguration(sdInstance *ServiceDisco
 	}
 
 	// Path for metrics endpoint is expected as a resource tag with the key '__metrics_path__'
-	defaultPath := aws.String("/metrics")
+	defaultMetricsPath, present := os.LookupEnv("DEFAULT_METRICS_PATH")
+	if !present {
+		defaultMetricsPath = "/metrics"
+	}
 	metricsPath, present := serviceTags[MetricsPathTag]
 	if !present {
-		metricsPath = defaultPath
+		metricsPath = aws.String(defaultMetricsPath)
 	}
 	labels["__metrics_path__"] = *metricsPath
 
