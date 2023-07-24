@@ -78,6 +78,8 @@ func loadPrometheusConfig(prometheusConfigParameter string) {
 	err := ioutil.WriteFile(prometheusConfigFilePath, []byte(*prometheusConfig), 0644)
 	if err != nil {
 		log.Println(err)
+	}  else {
+		log.Println(prometheusConfig)
 	}
 }
 
@@ -95,5 +97,7 @@ func reloadScrapeConfig() {
 	err := ioutil.WriteFile(scrapeConfigFilePath, []byte(*scrapConfig), 0644)
 	if err != nil {
 		log.Println(err)
+	} else {
+		log.Println(scrapConfig)
 	}
 }
