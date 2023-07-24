@@ -79,7 +79,8 @@ func loadPrometheusConfig(prometheusConfigParameter string) {
 	if err != nil {
 		log.Println(err)
 	}  else {
-		log.Println(prometheusConfig)
+		jsonb := json.Marshal(prometheusConfig)
+		fmt.Println(string(jsonb))
 	}
 }
 
@@ -98,6 +99,7 @@ func reloadScrapeConfig() {
 	if err != nil {
 		log.Println(err)
 	} else {
-		log.Println(scrapConfig)
+		jsonb := json.Marshal(scrapConfig)
+		fmt.Println(string(jsonb))
 	}
 }
